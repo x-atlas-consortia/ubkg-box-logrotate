@@ -1,0 +1,28 @@
+services:
+
+  logrotate:
+    container_name: ubkg-box-logrotate
+    image: ubkg-box-logrotate:latest
+    environment:
+      # Default schedule: daily at 02:00. Override with cron format, e.g. "0 * * * *" for hourly.
+      LOGROTATE_SCHEDULE: "0 2 * * *"
+    volumes:
+      # Same log directory as your app containers (nginx/app logs)
+      - "./log_ubkgbox:/var/log/ubkgbox"
+      # neo4j logs
+      - "./logs:/var/log/neo4j"
+      # Persist logrotate state so rotations remain consistent across restarts
+      - "./logrotate_state:/var/lib/logrotate"
+    restart: unless-stopped
+    build:
+      # Configure Compose for multi-architecture builds.
+      # Prerequisites:
+      # 1. Create an additional buildx builder by running
+      #    docker buildx create --use
+      # 2. Build tags for both the current version and "latest".
+      tags:
+        - docker.io/hubmap/ubkg-box-logrotate:latest
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
